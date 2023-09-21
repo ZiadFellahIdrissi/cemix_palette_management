@@ -30,9 +30,17 @@ app._favicon = "D_cemix.ico"
 
 # Varibales
 APP_PATH = str(pathlib.Path(__file__).parent.resolve())
+
+print("Main:  ",str(pathlib.Path(__file__).parent.resolve())) 
+
+print("Main:  ",  os.path.join(str(pathlib.Path(__file__).parent.resolve()), 'Parametres\Cemix_input_parametre.xlsx'))
+
 database_name = "Cemix_database_test.db"
+
 file_path_excel_parameter = os.path.join(APP_PATH, 'Parametres\Cemix_input_parametre.xlsx')
 shift_start_datetime_when_start = None
+
+print("zia")
 
 conn = sqlite3.connect(os.path.join(APP_PATH, database_name))
 cursor = conn.cursor()

@@ -17,12 +17,11 @@ from functions.functions import minutes_to_hh_mm, fetch_famille_options, get_inp
 Ligne_name = "Ligne 1"
 
 dash.register_page(__name__, name=Ligne_name)
-
 # Varibales
-APP_PATH = str(pathlib.Path(__file__).parent.resolve()) 
-database_name = "../Cemix_database_test.db"
+APP_PATH = str(pathlib.Path(__file__).parent.parent.resolve()) 
+database_name = "Cemix_database_test.db"
 
-file_path_excel_parameter = os.path.join(APP_PATH, '..\Parametres\Cemix_input_parametre.xlsx')
+file_path_excel_parameter = os.path.join(APP_PATH, 'Parametres\Cemix_input_parametre.xlsx')
 shift_start_datetime_when_start = None
 
 conn = sqlite3.connect(os.path.join(APP_PATH, database_name))
@@ -642,7 +641,7 @@ def Suivant(Suivant_button, product_family, article, nb_sac, Palette_comment, Po
             print("error")
 
         Num_Palette_complet = cemix_date.replace("-", ".") + cemix_shift.replace("shift", "S") + cemix_ligne.replace("line", "l") +  numero_palette
-        # generete_barcode(Num_Palette_complet.replace("_", "").replace("-",""), APP_PATH)
+        generete_barcode(Num_Palette_complet.replace("_", "").replace("-",""), APP_PATH)
 
         numero_palette = get_new_palette_number(cursor)
         conn.commit()   
