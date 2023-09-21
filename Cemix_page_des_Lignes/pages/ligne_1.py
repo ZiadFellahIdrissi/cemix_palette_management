@@ -14,9 +14,9 @@ from models.generete_barcode import generete_barcode
 from models.cemix_to_excel import cemix_to_excel
 from functions.functions import minutes_to_hh_mm, fetch_famille_options, get_input_options, get_new_palette_number
 
-Ligne_name = "Ligne 1"
+G__Ligne_name = "Ligne 1"
 
-dash.register_page(__name__, name=Ligne_name)
+dash.register_page(__name__, name=G__Ligne_name)
 # Varibales
 APP_PATH = str(pathlib.Path(__file__).parent.parent.resolve()) 
 database_name = "Cemix_database_test.db"
@@ -233,7 +233,7 @@ layout = html.Div([
         children = [
             html.H4(
                 id="Line_choisen", 
-                children="Vous avez choisi la ligne 1 .", 
+                children="Vous avez choisi la "+ G__Ligne_name + " .", 
                 style={
                     'text-align': 'center', 
                     'margin-top': '1%', 
@@ -371,17 +371,17 @@ def update_click_output(suivant_click, terminer_click, ligne, shift, operateur_m
             conn.commit()
 
             folder_this_day_format = datetime.datetime.now() - datetime.timedelta(1)
-            folder_this_day = os.path.join(APP_PATH, "../Journal Shifts", "Jour_" + folder_this_day_format.strftime("%d_%m_%Y"))
+            folder_this_day = os.path.join(APP_PATH, "Journal Shifts", "Jour_" + folder_this_day_format.strftime("%d_%m_%Y"), G__Ligne_name)
 
             if not os.path.exists(folder_this_day):
-                os.mkdir(folder_this_day)
+                os.makedirs(folder_this_day)
 
-            if not os.path.exists(os.path.join(folder_this_day, "All Day")):
-                os.mkdir(os.path.join(folder_this_day, "All Day"))
+            if not os.path.exists(os.path.join(folder_this_day, "Jour")):
+                os.mkdir(os.path.join(folder_this_day, "Jour"))
 
             day_before = datetime.datetime.now() - datetime.timedelta(hours=6.5) - datetime.timedelta(hours=24)
-            format_shifts_all_day = "Shifts__" + day_before.strftime("%d_%m_%Y") + ".xlsx"
-            path_shifts_all_day = os.path.join(folder_this_day, "All Day", format_shifts_all_day)
+            format_shifts_all_day = "Reporting_journalier_ensachage__" + day_before.strftime("%d_%m_%Y") + ".xlsx"
+            path_shifts_all_day = os.path.join(folder_this_day, "Jour", format_shifts_all_day)
 
             if not os.path.exists(path_shifts_all_day):
                 data_header_allDay = {
@@ -497,10 +497,10 @@ def update_click_output(suivant_click, terminer_click, ligne, shift, operateur_m
             cursor.execute("UPDATE cemix_info SET is_terminer = ? WHERE id = ?", (1, cemix_id,))
 
             folder_this_day_format = datetime.datetime.now().strftime("%d_%m_%Y")
-            folder_this_day = os.path.join(APP_PATH, "../Journal Shifts", "Jour_"+folder_this_day_format)
+            folder_this_day = os.path.join(APP_PATH, "Journal Shifts", "Jour_" + folder_this_day_format, G__Ligne_name)
 
             if not os.path.exists(folder_this_day):
-                os.mkdir(folder_this_day)
+                os.makedirs(folder_this_day)
             
             if not os.path.exists(os.path.join(folder_this_day, "Shifts")):
                 os.mkdir(os.path.join(folder_this_day, "Shifts"))
@@ -641,7 +641,7 @@ def Suivant(Suivant_button, product_family, article, nb_sac, Palette_comment, Po
             print("error")
 
         Num_Palette_complet = cemix_date.replace("-", ".") + cemix_shift.replace("shift", "S") + cemix_ligne.replace("line", "l") +  numero_palette
-        generete_barcode(Num_Palette_complet.replace("_", "").replace("-",""), APP_PATH)
+        # generete_barcode(Num_Palette_complet.replace("_", "").replace("-",""), APP_PATH)
 
         numero_palette = get_new_palette_number(cursor)
         conn.commit()   

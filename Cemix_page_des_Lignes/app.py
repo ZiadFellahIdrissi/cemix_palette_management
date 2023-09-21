@@ -30,17 +30,9 @@ app._favicon = "D_cemix.ico"
 
 # Varibales
 APP_PATH = str(pathlib.Path(__file__).parent.resolve())
-
-print("Main:  ",str(pathlib.Path(__file__).parent.resolve())) 
-
-print("Main:  ",  os.path.join(str(pathlib.Path(__file__).parent.resolve()), 'Parametres\Cemix_input_parametre.xlsx'))
-
 database_name = "Cemix_database_test.db"
-
 file_path_excel_parameter = os.path.join(APP_PATH, 'Parametres\Cemix_input_parametre.xlsx')
 shift_start_datetime_when_start = None
-
-print("zia")
 
 conn = sqlite3.connect(os.path.join(APP_PATH, database_name))
 cursor = conn.cursor()
@@ -369,6 +361,167 @@ def Model_Parameter(suivant_click, close):
 
     return {"display": "none"}
 
+
+
+
+@app.callback(
+    Output("upload-data", "disabled"),
+    Output("add-article-button", "disabled"),
+    Output("add-famille-button", "disabled"),
+    Output("dpt_edit", "disabled"),
+    Output("download-button", "style"),
+
+    Input("Password_input", "value")
+)
+def verify_password(password):
+    style={
+        # "display": "inline-block",
+        "padding": "10px 20px",
+        "background-color": "#007BFF",
+        "color": "#fff",
+        "text-decoration": "none",
+        "border": "none",
+        "border-radius": "5px",
+        "cursor": "pointer",
+        "font-weight": "bold",
+        'display': 'flex',
+        'width': '50%',
+        'margin-right': '10%',
+    }
+    if password == password_golabl:
+        return  False, False, False, False, style
+    else:
+        return  True, True, True, True, dash.no_update
+ 
+
+ 
+@app.callback(
+    Output('output-div', 'children'),
+    Input('upload-data', 'contents'),
+    Input('upload-data', 'filename')
+)
+def update_output(contents, filename):
+    if contents is None:
+        raise PreventUpdate
+
+    try:
+        # Parse the content of the uploaded file
+        content_type, content_string = contents.split(',')
+        decoded = base64.b64decode(content_string)
+        df = pd.read_excel(io.BytesIO(decoded))
+
+        # Define the folder path for saving the file
+        folder_path = os.path.join(APP_PATH, 'Parametres')
+
+        filename = "Cemix_input_parametre.xlsx"
+        # Define the full path for the saved file
+        file_path = os.path.join(folder_path, filename)
+
+        # Save the uploaded file to the folder
+        df.to_excel(file_path, index=False)
+
+        return html.Div([
+            html.H6('File successfully uploaded and saved to "Parametres" '),
+            html.P(filename)
+        ])
+
+    except Exception as e:
+        return html.Div([
+            html.H6('An error occurred while processing the file ...'),
+            html.Pre(str(e))
+        ])
+
+
+
+
+@app.callback(
+    Output('famille-dropdown', 'options'),
+    Output('famille-input', 'value'),
+    Output('abbv-famille-input', 'value'),
+    Output('famille-dropdown', 'value'),
+    Output('article-input', 'value'),
+    Output('article-abv-input', 'value'),
+    Output('Feedback-output', 'children'),
+    Output('Feedback-output', 'style'),
+    Output("DPT-input", "value"),
+    Input('dpt_edit', 'n_clicks'),
+    Input('add-famille-button', 'n_clicks'),
+    Input('add-article-button', 'n_clicks'),
+    State('famille-input', 'value'),
+    State('abbv-famille-input', 'value'),
+    State('famille-dropdown', 'value'),
+    State('article-input', 'value'),
+    State('article-abv-input', 'value'),
+    State("DPT-input", "value"),
+    prevent_initial_call=True
+)
+def add_famille_or_article(n_clicks_famille, n_clicks_article, n_clicks_dpt, famille_name, famille_abv, selected_famille, article_name, article_abv, dpt_in):
+    style = {
+        'margin-top': '5%',
+        'border': '1px solid white',
+        'border-radius': '10px',
+        'padding': '10px',
+        'align-items': "center",
+        'text-align': "center",
+        'display': 'block'
+    }
+    famille_options = fetch_famille_options()
+    
+    ctx = dash.callback_context
+    if ctx.triggered:
+        prop_id = ctx.triggered[0]["prop_id"].split(".")[0]
+        if prop_id == 'add-famille-button':
+            if famille_name and famille_abv:
+                conn = sqlite3.connect(os.path.join(APP_PATH, database_name))
+                cursor = conn.cursor()
+                cursor.execute("INSERT INTO Famille (nom_famille, abreviation_famille) VALUES (?, ?)",
+                            (famille_name, famille_abv))
+                conn.commit()
+                conn.close()
+                style["background-color"] = '#4CAF50'
+                msg_reuss = 'La Famille ' + famille_name + ' est Bien Ajoutée '
+                famille_options = fetch_famille_options()
+                return famille_options, '', '', '', '', '', msg_reuss, style, dash.no_update
+            else:
+                style["background-color"] = 'red'
+                msg_error = 'Remplissez les champs pour ajouter une Famille!'
+                return dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, msg_error, style, dash.no_update
+        
+        elif prop_id == 'add-article-button':
+            if selected_famille and article_name:
+                conn = sqlite3.connect(os.path.join(APP_PATH, database_name))
+                cursor = conn.cursor()
+                cursor.execute("INSERT INTO Article (nom_article, abreviation_article, famille_id) VALUES (?, ?, ?)",
+                            (article_name, article_abv, selected_famille))
+                conn.commit()
+                conn.close()
+                style["background-color"] = '#4CAF50'
+                msg_reuss = "L'article " + article_name + " est Bien Ajouté "
+                return dash.no_update, '', '', '', '', '', msg_reuss, style, dash.no_update
+            else:
+                style["background-color"] = 'red'
+                msg_error = 'Remplissez les champs pour ajouter un Article!'
+                return dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, msg_error, style, dash.no_update
+    
+        elif prop_id == 'dpt_edit':
+            if dpt_in:
+                global dpt_golabl
+                conn = sqlite3.connect(os.path.join(APP_PATH, database_name))
+                cursor = conn.cursor()
+                cursor.execute("update Parameter set dpt = ? where id = ?;",
+                              (dpt_in, 1,))
+                conn.commit()
+                conn.close()
+                style["background-color"] = '#4CAF50'
+                dpt_golabl = dpt_in
+                msg_reuss = "DPT est Bien Modifié [dpt = "+str(dpt_in)+" ]"
+                return dash.no_update, '', '', '', '', '', msg_reuss, style, dpt_in
+            else:
+                style["background-color"] = 'red'
+                msg_error = 'Remplissez le champ pour modifier le DPT !'
+                return dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, msg_error, style, dpt_in
+        
+    return famille_options, '', '', '', '', '', '', style, dpt_in
 
 
   
