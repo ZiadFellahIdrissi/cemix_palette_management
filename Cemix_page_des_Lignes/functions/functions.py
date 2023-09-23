@@ -2,6 +2,7 @@ import sqlite3
 import datetime
 import os
 import pathlib
+import pandas as pd
 
 APP_PATH = str(pathlib.Path(__file__).parent.resolve())
 database_name = "../Cemix_database_test.db"
@@ -106,3 +107,41 @@ def get_new_palette_number(cursor, ligne):
     # Close the database connection
     
     return new_numero_palette
+
+
+
+
+def get_shifts(ligne):
+    conn = sqlite3.connect(os.path.join(APP_PATH, database_name))
+    query = f"""
+                SELECT p.numero_palette, p.date, c.shift
+                FROM palette p
+                join cemix_info c on c.id = p.cemix_main_id
+                WHERE 
+                ((
+                strftime('%H:%M:%S', 'now') >= '07:00:00' 
+                AND p.date BETWEEN 
+                                datetime('now', 'start of day', '-0 day', '07:00:00') AND 
+                                datetime('now', 'start of day','+1 day', '07:00:00')
+                )
+                OR
+                (
+                strftime('%H:%M:%S', 'now') < '07:00:00' 
+                AND p.date BETWEEN 
+                                    datetime('now', 'start of day', '-1 day', '07:00:00') AND
+                                    datetime('now', 'start of day', '+0 day', '07:00:00')
+                ))
+                and 
+                c.ligne = '{ligne}' """
+    
+    df = pd.read_sql_query(query, conn)
+
+    list_shifts = ["shift-1", "shift-2", "shift-3", "shift-4", "shift-5", "shift-6"]
+    list_shifts_used = list(set(df["shift"])) 
+
+    shift_allowed = [item for item in list_shifts if item not in list_shifts_used]
+    conn.close()
+
+    shift_allowed_html = [{'label': shift.replace("s", "S").replace("-", " "), 'value': shift} for shift in shift_allowed]
+    return shift_allowed_html
+    
