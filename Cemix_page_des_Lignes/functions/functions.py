@@ -53,26 +53,29 @@ def get_input_options(df,column):
 
 
 
-def get_new_palette_number(cursor):
+def get_new_palette_number(cursor, ligne):
 
-    cursor.execute("""
-                        SELECT numero_palette, date
-                        FROM palette
+    cursor.execute(f"""
+                        SELECT p.numero_palette, p.date
+                        FROM palette p
+                        join cemix_info c on c.id = p.cemix_main_id
                         WHERE 
-                        (
+                        ((
                         strftime('%H:%M:%S', 'now') >= '07:00:00' 
-                        AND date BETWEEN 
+                        AND p.date BETWEEN 
                                         datetime('now', 'start of day', '-0 day', '07:00:00') AND 
                                         datetime('now', 'start of day','+1 day', '07:00:00')
                         )
                         OR
                         (
                         strftime('%H:%M:%S', 'now') < '07:00:00' 
-                        AND date BETWEEN 
+                        AND p.date BETWEEN 
                                             datetime('now', 'start of day', '-1 day', '07:00:00') AND
                                             datetime('now', 'start of day', '+0 day', '07:00:00')
-                        )
-                        ORDER BY date DESC
+                        ))
+                        and 
+                        c.ligne = '{ligne}'
+                        ORDER BY p.date DESC
                         LIMIT 1;
                     """)
     

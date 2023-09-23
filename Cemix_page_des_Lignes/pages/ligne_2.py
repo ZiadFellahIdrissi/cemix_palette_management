@@ -15,8 +15,8 @@ from models.cemix_to_excel import cemix_to_excel
 from models.cemix_Synthese_to_excel import cemix_Synthese_to_excel
 from functions.functions import minutes_to_hh_mm, fetch_famille_options, get_input_options, get_new_palette_number
 
-G__Ligne_name = "Ligne 1"
-G__Ligne_label = "line_1"
+G__Ligne_name = "Ligne 2"
+G__Ligne_label = "line_2"
 
 dash.register_page(__name__, name=G__Ligne_name)
 # Varibales
@@ -48,18 +48,18 @@ def generate_modal():
     conn.close()
 
     return html.Div(
-        id="markdown_ligne1",
+        id="markdown_ligne2",
         className="modal",
         children=(
             html.Div(
-                id="markdown-container-ligne1",
+                id="markdown-container-ligne2",
                 className="markdown-container",
                 children=[
                     html.Div(
                         className="close-container",
                         children=
                         html.Button(
-                            id="Time_Feedback-ligne1",
+                            id="Time_Feedback-ligne2",
                             children = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                             n_clicks=0,
                             className="closeButton",
@@ -68,11 +68,11 @@ def generate_modal():
 
                     html.Div([
                         html.H2("PALETTE N°", style={'text-align': 'center', "font-family": "Arial, sans-serif", "font-size": "32px", "margin-bottom": "3px"}),
-                        html.H1(id="number_of_palette-ligne1", children=str(numero_palette), style={'text-align': 'center', "font-family": "Georgia, serif", "font-size": "48px"}),
+                        html.H1(id="number_of_palette-ligne2", children=str(numero_palette), style={'text-align': 'center', "font-family": "Georgia, serif", "font-size": "48px"}),
                         html.Div([
                             
                             dcc.Dropdown(
-                                id = 'product_family_input-ligne1',
+                                id = 'product_family_input-ligne2',
                                 options=fetch_famille_options(),
                                 value = None,
                                 placeholder='Famille',
@@ -80,7 +80,7 @@ def generate_modal():
                             ),
                             
                             dcc.Dropdown(
-                                id = 'article_input-ligne1',
+                                id = 'article_input-ligne2',
                                 options=[],
                                 value = None,
                                 placeholder='Article',
@@ -93,14 +93,14 @@ def generate_modal():
 
                         html.Div([
                             dcc.Input(
-                                id = 'nb_sac_input-ligne1',
+                                id = 'nb_sac_input-ligne2',
                                 type='number',
                                 placeholder='NOMBRE DE SAC',
                                 autoComplete='off',
                                 style={"width": "97.5%", "height": "50px", "background-color": "#000000", "color": "#ffffff", 'font-weight': 'bold', 'text-align': 'center', 'margin-right': '15px'}
                             ),
                             dcc.Dropdown(
-                                id='Palette_comment-ligne1',
+                                id='Palette_comment-ligne2',
                                 options = get_input_options(df_inputs, "Commentaire"),
                                 value=None,
                                 placeholder='Commentaire',
@@ -112,7 +112,7 @@ def generate_modal():
                         html.Br(),
                         
                         dcc.Input(
-                            id = 'Poid_palette_input-ligne1',
+                            id = 'Poid_palette_input-ligne2',
                             type='text',
                             placeholder='POIDS PALETTE ...',
                             autoComplete='off',
@@ -121,7 +121,7 @@ def generate_modal():
                         html.Div([
                             html.Label('ECHANTILLON 4 KG', style = {"width": "100%", 'font-size': '30px', "margin-right": "50px"}),
                             dcc.RadioItems(
-                                id = 'echantillon_4kg_input-ligne1',
+                                id = 'echantillon_4kg_input-ligne2',
                                 options=[
                                     {'label': 'Oui', 'value': 'Oui'},
                                     {'label': 'Non', 'value': 'Non'}
@@ -132,7 +132,7 @@ def generate_modal():
                             ),
                             html.Label('ECHANTILLON 10 KG', style = {"width": "100%", 'font-size': '30px', "margin-right": "50px"}),
                             dcc.RadioItems(
-                                id = 'echantillon_10kg_input-ligne1',
+                                id = 'echantillon_10kg_input-ligne2',
                                 options=[
                                     {'label': 'Oui', 'value': 'Oui'},
                                     {'label': 'Non', 'value': 'Non'}
@@ -147,7 +147,7 @@ def generate_modal():
 
                         html.Div([
                             html.Button(
-                                id='Suivant_button-ligne1',
+                                id='Suivant_button-ligne2',
                                 children="Suivant",
                                 n_clicks=0,
                                 style={
@@ -171,7 +171,7 @@ def generate_modal():
                                 }
                             ),
                             html.Button(
-                                id='Terminer-Button-ligne1',
+                                id='Terminer-Button-ligne2',
                                 children="Terminer",
                                 n_clicks=0,
                                 style={
@@ -242,7 +242,7 @@ layout = html.Div([
                     "font-family": "Georgia, serif"}
             ),
             dcc.Dropdown(
-                id='ligne-input-ligne1',
+                id='ligne-input-ligne2',
                 options=[
                             {'label': G__Ligne_name , 'value': G__Ligne_label},
 
@@ -251,7 +251,7 @@ layout = html.Div([
                 style={'margin': '6px auto','margin-top': '20px', 'width': '80%', 'text-align':'center'}
             ),
             dcc.Dropdown(
-                id='shift-input-ligne1',
+                id='shift-input-ligne2',
                 options=[
                             {'label': "Shift 1", 'value': "shift-1"},
                             {'label': "Shift 2", 'value': "shift-2"},
@@ -265,42 +265,42 @@ layout = html.Div([
                 style={'margin': '6px auto', 'width': '80%', 'text-align':'center', 'opacity': '1', 'font-weight':'bold'}
             ),
             dcc.Dropdown(
-                id='operateur_mix-input-ligne1',
+                id='operateur_mix-input-ligne2',
                 options=get_input_options(df_inputs, "operateur_mix"),
                 value=None,
                 placeholder="OPERATEUR MIX",
                 style={'margin': '6px auto', 'width': '80%', 'text-align':'center', 'color':'white', 'opacity': '1', 'font-weight':'bold'}
             ),
             dcc.Dropdown(
-                id='operateur_ensacheus-input-ligne1',
+                id='operateur_ensacheus-input-ligne2',
                 options=get_input_options(df_inputs, "operateur_ensacheuse"),
                 value = None,
                 placeholder="OPERATEUR ENSACHEUS",
                 style={'margin': '6px auto', 'width': '80%', 'text-align':'center', 'color':'white', 'opacity': '1', 'font-weight':'bold'}
             ),
             dcc.Dropdown(
-                id='clarsite_m-input-ligne1',
+                id='clarsite_m-input-ligne2',
                 options=get_input_options(df_inputs, "clariste_m"),
                 value = None,
                 placeholder="CLARISTE M",
                 style={'margin': '6px auto', 'width': '80%', 'text-align':'center', 'color':'white', 'opacity': '1', 'font-weight':'bold'}
             ),
             dcc.Dropdown(
-                id='clarsite_p-input-ligne1',
+                id='clarsite_p-input-ligne2',
                 options=get_input_options(df_inputs, "clariste_p"),
                 value = None,
                 placeholder="CLARISTE P",
                 style={'margin': '6px auto', 'width': '80%', 'text-align':'center', 'color':'white', 'opacity': '1', 'font-weight':'bold'}
             ),
             dcc.Dropdown(
-                id='aide_magasinier-input-ligne1',
+                id='aide_magasinier-input-ligne2',
                 options=get_input_options(df_inputs, "aide_magasinier"),
                 value = None,
                 placeholder="AIDE MAGASINIER" ,
                 style={'margin': '6px auto', 'width': '80%', 'text-align':'center', 'color':'white', 'opacity': '1', 'font-weight':'bold'}
             ),
             html.Button(
-                id='start-shift-ligne1',
+                id='start-shift-ligne2',
                 children=[
                     html.Span(className='plus', children='Demare')
                 ],
@@ -326,7 +326,7 @@ layout = html.Div([
                 }
             ),
             html.Div(
-                id='Feedback-Demare-ligne1',
+                id='Feedback-Demare-ligne2',
                 children="ziad fellah",
                 style={
                     'margin-top':'2%',
@@ -341,21 +341,21 @@ layout = html.Div([
 
 
 @callback(
-    Output("markdown_ligne1", "style"),
-    Output("Feedback-Demare-ligne1", "children"),
-    Output("Feedback-Demare-ligne1", "style"),
+    Output("markdown_ligne2", "style"),
+    Output("Feedback-Demare-ligne2", "children"),
+    Output("Feedback-Demare-ligne2", "style"),
     [
-        Input("start-shift-ligne1", "n_clicks"),
-        Input("Terminer-Button-ligne1", "n_clicks"),
+        Input("start-shift-ligne2", "n_clicks"),
+        Input("Terminer-Button-ligne2", "n_clicks"),
     ],
     [
-        State("ligne-input-ligne1", "value"),
-        State("shift-input-ligne1", "value"),
-        State("operateur_mix-input-ligne1", "value"),
-        State("operateur_ensacheus-input-ligne1", "value"),
-        State("clarsite_m-input-ligne1", "value"),
-        State("clarsite_p-input-ligne1", "value"),
-        State("aide_magasinier-input-ligne1", "value"),
+        State("ligne-input-ligne2", "value"),
+        State("shift-input-ligne2", "value"),
+        State("operateur_mix-input-ligne2", "value"),
+        State("operateur_ensacheus-input-ligne2", "value"),
+        State("clarsite_m-input-ligne2", "value"),
+        State("clarsite_p-input-ligne2", "value"),
+        State("aide_magasinier-input-ligne2", "value"),
     ],
     prevent_initial_call= True,
 )
@@ -365,7 +365,7 @@ def update_click_output(suivant_click, terminer_click, ligne, shift, operateur_m
     if ctx.triggered and suivant_click > 0:
 
         prop_id = ctx.triggered[0]["prop_id"].split(".")[0]
-        if prop_id == "start-shift-ligne1" :
+        if prop_id == "start-shift-ligne2" :
 
             if shift != None and operateur_mix != None and operateur_ensacheus != None and clarsite_m != None and clarsite_p != None and aide_magasinier != None:
 
@@ -530,7 +530,7 @@ def update_click_output(suivant_click, terminer_click, ligne, shift, operateur_m
                 Text_Error = "Remplissez les champs pour demare un Shift"
                 return dash.no_update, Text_Error, style
 
-        if prop_id == "Terminer-Button-ligne1" :
+        if prop_id == "Terminer-Button-ligne2" :
             conn = sqlite3.connect(os.path.join(APP_PATH, database_name))
             data_header_shift = {
                 'Variable': ['OPERATEUR MIX', 'OPERATEUR ENSACH', 'CLARIST P', 'CLARIST M', 'AIDE MAGASIGNIER', 'Date', 'Heure', 'Durée de palette Theorique', 'Objectif PALETTE theorique', 'TOTAL SAC THEORIQUE', 'TOTAL POID', 'Total d\'heure travail', "durée total d'arret", 'Total palette', 'total sac'],
@@ -636,26 +636,26 @@ def update_click_output(suivant_click, terminer_click, ligne, shift, operateur_m
 
 @callback(
     [
-        Output("number_of_palette-ligne1", "children"),
-        Output("product_family_input-ligne1", "value"),
-        Output("article_input-ligne1", "value"),
-        Output("nb_sac_input-ligne1", "value"),
-        Output("Palette_comment-ligne1", "value"),
-        Output("Poid_palette_input-ligne1", "value"),
-        Output("echantillon_4kg_input-ligne1", "value"),
-        Output("echantillon_10kg_input-ligne1", "value"),
-        Output("Time_Feedback-ligne1", "children"),
-        Output("Time_Feedback-ligne1", "style"),
+        Output("number_of_palette-ligne2", "children"),
+        Output("product_family_input-ligne2", "value"),
+        Output("article_input-ligne2", "value"),
+        Output("nb_sac_input-ligne2", "value"),
+        Output("Palette_comment-ligne2", "value"),
+        Output("Poid_palette_input-ligne2", "value"),
+        Output("echantillon_4kg_input-ligne2", "value"),
+        Output("echantillon_10kg_input-ligne2", "value"),
+        Output("Time_Feedback-ligne2", "children"),
+        Output("Time_Feedback-ligne2", "style"),
     ],
-    [Input("Suivant_button-ligne1", "n_clicks")],
+    [Input("Suivant_button-ligne2", "n_clicks")],
     [
-        State("product_family_input-ligne1", "value"),
-        State("article_input-ligne1", "value"),
-        State("nb_sac_input-ligne1", "value"),
-        State("Palette_comment-ligne1", "value"),
-        State("Poid_palette_input-ligne1", "value"),
-        State("echantillon_4kg_input-ligne1", "value"),
-        State("echantillon_10kg_input-ligne1", "value"),
+        State("product_family_input-ligne2", "value"),
+        State("article_input-ligne2", "value"),
+        State("nb_sac_input-ligne2", "value"),
+        State("Palette_comment-ligne2", "value"),
+        State("Poid_palette_input-ligne2", "value"),
+        State("echantillon_4kg_input-ligne2", "value"),
+        State("echantillon_10kg_input-ligne2", "value"),
     ],
     
     prevent_initial_call= True
@@ -736,8 +736,8 @@ def Suivant(Suivant_button, product_family, article, nb_sac, Palette_comment, Po
 
 
 @callback(
-    Output('article_input-ligne1', 'options'),
-    Input('product_family_input-ligne1', 'value')
+    Output('article_input-ligne2', 'options'),
+    Input('product_family_input-ligne2', 'value')
 )
 def update_article_options(selected_famille):
     if selected_famille is None:
