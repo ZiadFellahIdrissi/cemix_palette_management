@@ -10,7 +10,7 @@ import sqlite3
 import random
 import datetime
 import base64
-from models.generete_barcode import generete_barcode
+# from models.generete_barcode import generete_barcode
 from models.cemix_to_excel import cemix_to_excel
 from functions.functions import minutes_to_hh_mm ,fetch_famille_options ,get_input_options ,get_new_palette_number
 import flask

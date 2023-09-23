@@ -10,11 +10,13 @@ import sqlite3
 import random
 import datetime
 import base64
-from models.generete_barcode import generete_barcode
+# from models.generete_barcode import generete_barcode
 from models.cemix_to_excel import cemix_to_excel
+from models.cemix_Synthese_to_excel import cemix_Synthese_to_excel
 from functions.functions import minutes_to_hh_mm, fetch_famille_options, get_input_options, get_new_palette_number
 
 G__Ligne_name = "Ligne 1"
+G__Ligne_label = "line_1"
 
 dash.register_page(__name__, name=G__Ligne_name)
 # Varibales
@@ -57,8 +59,8 @@ def generate_modal():
                         className="close-container",
                         children=
                         html.Button(
+                            id="Time_Feedback",
                             children = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                            id="markdown_close",
                             n_clicks=0,
                             className="closeButton",
                         ),
@@ -124,7 +126,7 @@ def generate_modal():
                                     {'label': 'Oui', 'value': 'oui'},
                                     {'label': 'Non', 'value': 'non'}
                                 ],
-                                value='oui',
+                                value=None,
                                 labelStyle={'display': 'flex', 'font-size': '28px'},
                                 style = {"width": "100%"}
                             ),
@@ -135,7 +137,7 @@ def generate_modal():
                                     {'label': 'Oui', 'value': 'oui'},
                                     {'label': 'Non', 'value': 'non'}
                                 ],
-                                value='non',
+                                value=None,
                                 labelStyle={'display': 'flex', 'font-size': '28px'},
                                 style = {"width": "100%"}
                             
@@ -194,7 +196,6 @@ def generate_modal():
                             ),
                             
                         ], style={'display': 'flex', 'width': '100%', "margin":"1px auto"}),
-
                         
                     ], style={"width": "86%", "margin": "10px auto", 'textAlign': 'center'})
 
@@ -252,7 +253,6 @@ layout = html.Div([
             dcc.Dropdown(
                 id='shift-input',
                 options=[
-                            {'label': 'Shifts', 'value': 'Shift'},
                             {'label': "Shift 1", 'value': "shift-1"},
                             {'label': "Shift 2", 'value': "shift-2"},
                             {'label': "Shift 3", 'value': "shift-3"},
@@ -260,8 +260,9 @@ layout = html.Div([
                             {'label': "Shift 5", 'value': "shift-5"},
                             {'label': "Shift 6", 'value': "shift-6"}
                         ],
-                value='Shift',
-                style={'margin': '6px auto', 'width': '80%', 'text-align':'center'}
+                placeholder = "Shift",
+                value=None,
+                style={'margin': '6px auto', 'width': '80%', 'text-align':'center', 'opacity': '1', 'font-weight':'bold'}
             ),
             dcc.Dropdown(
                 id='operateur_mix-input',
@@ -299,31 +300,38 @@ layout = html.Div([
                 style={'margin': '6px auto', 'width': '80%', 'text-align':'center', 'color':'white', 'opacity': '1', 'font-weight':'bold'}
             ),
             html.Button(
-                    id='start-shift',
-                    children=[
-                        html.Span(className='plus', children='Demare')
-                    ],
-                    n_clicks=0,
-                    style={
-                        'padding': '0px',
-                        'background-color': '#4CAF50',
-                        'border': 'none',
-                        'color': 'white',
-                        'font-size': '16px',
-                        'cursor': 'pointer',
-                        'border-radius': '25px',
-                        'box-shadow': '0 2px 2px 0 rgba(0, 0, 0, 0.8)',
-                        'vertical-align': "center",
-                        'display': 'flex',
-                        'align-items': 'center',
-                        'justify-content': 'center',
-                        'width': '200px',
-                        'height': '40px',
-                        'margin': '8px auto',
-                        'margin-top': '20px'
+                id='start-shift',
+                children=[
+                    html.Span(className='plus', children='Demare')
+                ],
+                n_clicks=0,
+                style={
+                    'padding': '0px',
+                    'background-color': '#4CAF50',
+                    'border': 'none',
+                    'color': 'white',
+                    'font-size': '16px',
+                    'cursor': 'pointer',
+                    'border-radius': '25px',
+                    'box-shadow': '0 2px 2px 0 rgba(0, 0, 0, 0.8)',
+                    'vertical-align': "center",
+                    'display': 'flex',
+                    'align-items': 'center',
+                    'justify-content': 'center',
+                    'width': '200px',
+                    'height': '40px',
+                    'margin': '8px auto',
+                    'margin-top': '20px'
 
-                    }
-                ),
+                }
+            ),
+            html.Div(
+                id='Feedback-Demare-',
+                children="ziad fellah",
+                style={
+                    'margin-top':'2%',
+                    'display':'none'
+                }),
         ], style={"width": "95%", "margin": "10px auto",  "padding": "2%", 'textAlign': 'center'}
     ),
     generate_modal(),
@@ -334,6 +342,8 @@ layout = html.Div([
 
 @callback(
     Output("markdown", "style"),
+    Output("Feedback-Demare-", "children"),
+    Output("Feedback-Demare-", "style"),
     [
         Input("start-shift", "n_clicks"),
         Input("Terminer-Button", "n_clicks"),
@@ -356,120 +366,177 @@ def update_click_output(suivant_click, terminer_click, ligne, shift, operateur_m
 
         prop_id = ctx.triggered[0]["prop_id"].split(".")[0]
         if prop_id == "start-shift" :
-            global shift_start_datetime_when_start
-            conn = sqlite3.connect(os.path.join(APP_PATH, database_name))
-            query = """
-                        INSERT INTO cemix_info (date, heure, ligne, shift, operateur_mix, operateur_ensacheuse, clarist_m, clariste_p, aide_magasinier, is_terminer)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    """
-            
-            shift_start_datetime_when_start = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-            current_date = datetime.datetime.now() - datetime.timedelta(hours=6.5)
-            current_time = datetime.datetime.now().strftime("%H:%M:%S")
-            conn.execute(query, (current_date.strftime("%Y-%m-%d"), current_time, ligne, shift, operateur_mix, operateur_ensacheus, clarsite_m ,clarsite_p ,aide_magasinier, 0))
-            conn.commit()
+            if shift != None and operateur_mix != None and operateur_ensacheus != None and clarsite_m != None and clarsite_p != None and aide_magasinier != None:
 
-            folder_this_day_format = datetime.datetime.now() - datetime.timedelta(1)
-            folder_this_day = os.path.join(APP_PATH, "Journal Shifts", "Jour_" + folder_this_day_format.strftime("%d_%m_%Y"), G__Ligne_name)
-
-            if not os.path.exists(folder_this_day):
-                os.makedirs(folder_this_day)
-
-            if not os.path.exists(os.path.join(folder_this_day, "Jour")):
-                os.mkdir(os.path.join(folder_this_day, "Jour"))
-
-            day_before = datetime.datetime.now() - datetime.timedelta(hours=6.5) - datetime.timedelta(hours=24)
-            format_shifts_all_day = "Reporting_journalier_ensachage__" + day_before.strftime("%d_%m_%Y") + ".xlsx"
-            path_shifts_all_day = os.path.join(folder_this_day, "Jour", format_shifts_all_day)
-
-            if not os.path.exists(path_shifts_all_day):
-                data_header_allDay = {
-                    'Variable': [
-                        'Date', 'Heure', 'Durée de palette Theorique', 'Objectif PALETTE theorique',
-                        'TOTAL SAC THEORIQUE', 'TOTAL POID', 'Total d\'heure travail',
-                        'durée total d\'arret', 'Total palette', 'total sac'
-                        ],
-                    'Value': None
-                }
-
+                global shift_start_datetime_when_start
+                conn = sqlite3.connect(os.path.join(APP_PATH, database_name))
                 query = """
-                    SELECT c.date as 'Date de Shift', c.heure as 'Heure de Shift',
-                    c.ligne as 'Ligne', c.shift as 'Shift', c.operateur_mix as 'Operateur Mix', 
-                    c.operateur_ensacheuse  as 'Operateur Ensacheuse',
-                    c.clarist_m  as 'Clarist M', c.clariste_p as 'Clariste P',
-                    c.aide_magasinier as 'Aide Magasinier',
-                    p.date as 'Date de Palette', p.numero_palette as 'Numero de Palette' ,
-                    a.nom_article as 'Article', p.nombre_de_sac as 'Nombre de Sac',
-                    p.Commentair as 'Error Commentair', p.poids as 'Poids',
-                    p.echantillon_10Kg as 'Echantillon 10Kg',
-                    p.echantillon_4Kg as 'Echantillon 4Kg',
-                    p.duration_min as 'Palatte_duration',
-                    p.ecart_by_10 as 'Ecart'
-                    FROM cemix_info c
-                    join palette p on p.cemix_main_id = c.id
-                    join article a on a.id = p.article_id
-                    where DATE(c.date) = DATE('now', '-19 day');
-                """
-                df_all_day = pd.read_sql_query(query, conn)
-
-
-                Date_cemix = df_all_day["Date de Shift"].iloc[0]
-                heure_cemix = df_all_day["Heure de Shift"].iloc[0]
-                tottal_heure_travaile = df_all_day["Palatte_duration"].sum()
-
-                otp = round(( (tottal_heure_travaile) / dpt_golabl ),2)
-                ots = round((otp*64),2)
-
-                tottal_poids = df_all_day["Poids"].sum()
-                tottal_darret = df_all_day[df_all_day["Ecart"] >= 0]["Ecart"].sum()
-                tottal_palette = df_all_day.shape[0]
-                tottal_sac = df_all_day["Nombre de Sac"].sum()
+                            INSERT INTO cemix_info (date, heure, ligne, shift, operateur_mix, operateur_ensacheuse, clarist_m, clariste_p, aide_magasinier, is_terminer)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        """
                 
+                shift_start_datetime_when_start = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-                final_values_header = []
-                final_values_header.extend([
-                                            Date_cemix, heure_cemix, str(dpt_golabl), str(otp),
-                                            str(ots), str(tottal_poids), 
-                                            minutes_to_hh_mm(tottal_heure_travaile), str(tottal_darret), str(tottal_palette),
-                                            str(tottal_sac)
-                                            ])
-            
-                data_header_allDay["Value"] =  final_values_header
+                current_date = datetime.datetime.now() - datetime.timedelta(hours=6.5)
+                current_time = datetime.datetime.now().strftime("%H:%M:%S")
+                conn.execute(query, (current_date.strftime("%Y-%m-%d"), current_time, ligne, shift, operateur_mix, operateur_ensacheus, clarsite_m ,clarsite_p ,aide_magasinier, 0))
+                conn.commit()
 
-                df_all_day_UD = df_all_day[[
-                        "Date de Palette", "Numero de Palette", "Nombre de Sac", "Article",
-                        "Operateur Mix", "Operateur Ensacheuse", "Clarist M", "Clariste P", "Aide Magasinier",
-                        "Error Commentair", "Palatte_duration", "Ecart"
-                        ]]
+                folder_this_day_format = datetime.datetime.now() - datetime.timedelta(1)
+                folder_this_day = os.path.join(APP_PATH, "Journal Shifts", "Jour_" + folder_this_day_format.strftime("%d_%m_%Y"), G__Ligne_name)
 
-                header_all_day = df_all_day_UD.columns.tolist()
-                df_all_day_UD.loc[-1] = header_all_day
-                df_all_day_UD.index = df_all_day_UD.index + 1
-                df_all_day_UD = df_all_day_UD.sort_index()
+                if not os.path.exists(folder_this_day):
+                    os.makedirs(folder_this_day)
 
-                cemix_to_excel(
-                                df_header = data_header_allDay,
-                                df_ = df_all_day_UD, 
-                                header_name = "reporting journalier d'ensachage",
-                                filename = path_shifts_all_day, 
-                                ishift = False, 
-                                size = 16.5, 
-                                num_rows=2 
-                            )
+                if not os.path.exists(os.path.join(folder_this_day, "Jour")):
+                    os.mkdir(os.path.join(folder_this_day, "Jour"))
 
-            conn.close()
+                day_before = datetime.datetime.now() - datetime.timedelta(hours=6.5) - datetime.timedelta(hours=24)
+                format_shifts_all_day = "Reporting_journalier_ensachage__" + day_before.strftime("%d_%m_%Y") + ".xlsx"
+                path_shifts_all_day = os.path.join(folder_this_day, "Jour", format_shifts_all_day)
+
+                try:
+                    if not os.path.exists(path_shifts_all_day):
+                        data_header_allDay = {
+                            'Variable': [
+                                'Date', 'Heure', 'Durée de palette Theorique', 'Objectif PALETTE theorique',
+                                'TOTAL SAC THEORIQUE', 'TOTAL POID', 'Total d\'heure travail',
+                                'durée total d\'arret', 'Total palette', 'total sac'
+                                ],
+                            'Value': None
+                        }
+
+                        query = f"""
+                            SELECT c.date as 'Date de Shift', c.heure as 'Heure de Shift',
+                            c.ligne as 'Ligne', c.shift as 'Shift', c.operateur_mix as 'Operateur Mix', 
+                            c.operateur_ensacheuse  as 'Operateur Ensacheuse',
+                            c.clarist_m  as 'Clarist M', c.clariste_p as 'Clariste P',
+                            c.aide_magasinier as 'Aide Magasinier',
+                            p.date as 'Date de Palette', p.numero_palette as 'Numero de Palette' ,
+                            a.nom_article as 'Article', p.nombre_de_sac as 'Nombre de Sac',
+                            p.Commentair as 'Error Commentair', p.poids as 'Poids',
+                            p.echantillon_10Kg as 'Echantillon 10Kg',
+                            p.echantillon_4Kg as 'Echantillon 4Kg',
+                            p.duration_min as 'Palatte_duration',
+                            p.ecart_by_10 as 'Ecart'
+                            FROM cemix_info c
+                            join palette p on p.cemix_main_id = c.id
+                            join article a on a.id = p.article_id
+                            where DATE(c.date) = DATE('now', '-1 day') and c.ligne = '{G__Ligne_label}' """
+
+                        df_all_day = pd.read_sql_query(query, conn)
+
+                        Date_cemix = df_all_day["Date de Shift"].iloc[0]
+                        heure_cemix = df_all_day["Heure de Shift"].iloc[0]
+                        tottal_heure_travaile = df_all_day["Palatte_duration"].sum()
+
+                        otp = round(( (tottal_heure_travaile) / dpt_golabl ),2)
+                        ots = round((otp*64),2)
+
+                        tottal_poids = df_all_day["Poids"].sum()
+                        tottal_darret = df_all_day[df_all_day["Ecart"] >= 0]["Ecart"].sum()
+                        tottal_palette = df_all_day.shape[0]
+                        tottal_sac = df_all_day["Nombre de Sac"].sum()
+                        
+
+                        final_values_header = []
+                        final_values_header.extend([
+                                                    Date_cemix, heure_cemix, str(dpt_golabl), str(otp),
+                                                    str(ots), str(tottal_poids), 
+                                                    minutes_to_hh_mm(tottal_heure_travaile), str(tottal_darret), str(tottal_palette),
+                                                    str(tottal_sac)
+                                                    ])
+                    
+                        data_header_allDay["Value"] =  final_values_header
+
+                        df_all_day_UD = df_all_day[[
+                                "Date de Palette", "Numero de Palette", "Nombre de Sac", "Article",
+                                "Operateur Mix", "Operateur Ensacheuse", "Clarist M", "Clariste P", "Aide Magasinier",
+                                "Error Commentair", "Palatte_duration", "Ecart"
+                                ]]
+
+                        header_all_day = df_all_day_UD.columns.tolist()
+                        df_all_day_UD.loc[-1] = header_all_day
+                        df_all_day_UD.index = df_all_day_UD.index + 1
+                        df_all_day_UD = df_all_day_UD.sort_index()
+
+                        cemix_to_excel(
+                                        df_header = data_header_allDay,
+                                        df_ = df_all_day_UD, 
+                                        header_name = "Reporting Journalier D'ensachage",
+                                        filename = path_shifts_all_day, 
+                                        ishift = False, 
+                                        size = 16.5, 
+                                        num_rows=2 
+                                    )
+
+                        agg_functions = {
+                            'Palatte_duration' : 'sum',
+                            'Numero de Palette': 'count', 
+                            'Nombre de Sac': 'sum',
+                            'Ecart': lambda x: x[x > 0].sum(),
+                            "Error Commentair": lambda x: '\n'.join(x[(x != "") | (x != None)]),
+                            'Echantillon 10Kg': lambda x: x[x == "Oui"].count(),
+                            'Echantillon 4Kg': lambda x: x[x == "Oui"].count(),
+                            'Poids' : "sum",
+                        }
+
+                        df_synthes = df_all_day.groupby(["Shift"]).agg(agg_functions).reset_index()
+
+                        df_synthes.rename(columns = {
+                                                    "Palatte_duration": "Tottal Heure Travaile", 
+                                                    "Numero de Palette": "Nombre De Palette Produite",
+                                                    "Ecart" : "Nombre d'heure d'arret", 
+                                                    "Nombre de Sac": "Nombre Total SAC", 
+                                                    "Poids" : "Tottal Poids", 
+                                                    "Echantillon 10Kg": "Tottal Echantillon 10Kg", 
+                                                    "Echantillon 4Kg": "Tottal Echantillon 4Kg",
+                                                    "Error Commentair": "Cause"
+                                                    }, 
+                                        inplace = True 
+                                    )
+
+                        df_synthes["NBR SAC/PALETTE"] = df_synthes["Nombre Total SAC"] / df_synthes["Nombre De Palette Produite"]
+                        df_synthes["Poid Tottal/PALETTE"] = df_synthes["Tottal Poids"] / df_synthes["Nombre De Palette Produite"]
+                        df_synthes["OPT"] = round( df_synthes["Tottal Heure Travaile"] / dpt_golabl, 2 )
+                        df_synthes["ECART PALETTE"] = df_synthes["OPT"] - df_synthes["Tottal Heure Travaile"]
+                        df_synthes["OTS"] = round(df_synthes["OPT"]*64, 2)
+
+                        df_synthes = df_synthes[["Shift", "Tottal Heure Travaile", "Nombre De Palette Produite", "OPT", "ECART PALETTE", 
+                                                "Nombre d'heure d'arret", "Cause", "Nombre Total SAC", "OTS", "Tottal Poids", 
+                                                "NBR SAC/PALETTE", "Poid Tottal/PALETTE", "Tottal Echantillon 10Kg", "Tottal Echantillon 4Kg"]]
+
+
+
+
+                        format_Synthese = "Synthese_de_production__" + day_before.strftime("%d_%m_%Y") + ".xlsx"
+                        path_Synthese = os.path.join(folder_this_day, "Jour", format_Synthese)
+                        cemix_Synthese_to_excel(df_synthes, path_Synthese)
+
+                except:
+                    print("This could be the first day, let's just skip it !")
+
+                conn.close()
                 
-            
-            return {"display": "block"}
-        
+                return {"display": "block"}, "", {}
+            else:
+                colors_list = ["#98260E", "#FF0000", "#770000", "#FF6C6E", "#C9005B"]
+                style={
+                    "color" : random.choice(colors_list),
+                    "font-weight": "Bold",
+                    "font-size": "25px"
+                }
+                Text_Error = "Remplissez les champs pour demare un Shift"
+                return dash.no_update, Text_Error, style
+
         if prop_id == "Terminer-Button" :
             conn = sqlite3.connect(os.path.join(APP_PATH, database_name))
             data_header_shift = {
                 'Variable': ['OPERATEUR MIX', 'OPERATEUR ENSACH', 'CLARIST P', 'CLARIST M', 'AIDE MAGASIGNIER', 'Date', 'Heure', 'Durée de palette Theorique', 'Objectif PALETTE theorique', 'TOTAL SAC THEORIQUE', 'TOTAL POID', 'Total d\'heure travail', "durée total d'arret", 'Total palette', 'total sac'],
                 'Value': None
             }
-            query = """
+            query = f"""
                 SELECT c.date as 'Date de Shift', c.heure as 'Heure de Shift',
                 c.ligne as 'Ligne', c.shift as 'Shift', c.operateur_mix as 'Operateur Mix', 
                 c.operateur_ensacheuse  as 'Operateur Ensacheuse',
@@ -485,91 +552,91 @@ def update_click_output(suivant_click, terminer_click, ligne, shift, operateur_m
                 FROM cemix_info c
                 join palette p on p.cemix_main_id = c.id
                 join article a on a.id = p.article_id
-                where c.is_terminer = 0;
-            """
+                where c.is_terminer = 0 and c.ligne = '{G__Ligne_label}' """
+            
             df_shift = pd.read_sql_query(query, conn)
 
             cursor = conn.cursor()
-            cursor.execute("SELECT c.id FROM cemix_info c WHERE c.is_terminer = ?", (0,))
-            result = cursor.fetchone()
+            cursor.execute("SELECT c.id FROM cemix_info c WHERE c.is_terminer = ? and c.ligne = ?", (0, str(G__Ligne_label)))
+            result = cursor.fetchone()  
             cemix_id = result[0]
 
-            cursor.execute("UPDATE cemix_info SET is_terminer = ? WHERE id = ?", (1, cemix_id,))
+            cursor.execute("UPDATE cemix_info SET is_terminer = ? WHERE id = ? and ligne = ?", (1, cemix_id, str(G__Ligne_label),))
 
-            folder_this_day_format = datetime.datetime.now().strftime("%d_%m_%Y")
-            folder_this_day = os.path.join(APP_PATH, "Journal Shifts", "Jour_" + folder_this_day_format, G__Ligne_name)
+            if df_shift.shape[0] > 0:
+                folder_this_day_format = datetime.datetime.now().strftime("%d_%m_%Y")
+                folder_this_day = os.path.join(APP_PATH, "Journal Shifts", "Jour_" + folder_this_day_format, G__Ligne_name)
 
-            if not os.path.exists(folder_this_day):
-                os.makedirs(folder_this_day)
+                if not os.path.exists(folder_this_day):
+                    os.makedirs(folder_this_day)
+                
+                if not os.path.exists(os.path.join(folder_this_day, "Shifts")):
+                    os.mkdir(os.path.join(folder_this_day, "Shifts"))
+
+                shift_format = shift + "__" + datetime.datetime.now().strftime("%d_%M_%Y__%H_%M_%S") + ".xlsx"
+                file_output_shift = os.path.join(folder_this_day, "Shifts", shift_format)
+
+
+                cemix_info_list = list(df_shift[["Operateur Mix","Operateur Ensacheuse", "Clariste P", "Clarist M", "Aide Magasinier"]].iloc[0])
+                shift_start_date = df_shift["Date de Shift"].iloc[0]
+                shift_start_time = df_shift["Heure de Shift"].iloc[0]
+
+                shift_start_datetime = df_shift["Date de Palette"].iloc[0]
+                shift_start_datetime = datetime.datetime.strptime(shift_start_datetime , '%Y-%m-%d %H:%M:%S')
+
+                current_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                current_date = datetime.datetime.strptime(current_date , '%Y-%m-%d %H:%M:%S')
+
+                tottal_dure_travaile = current_date - shift_start_datetime
+                otp = round(( (tottal_dure_travaile.total_seconds() / 60) / dpt_golabl ),2)
+                ots = round((otp*64),2)
+                tottal_poids = df_shift["Poids"].sum()
+                tottal_darret = df_shift[df_shift["Ecart"] >= 0]["Ecart"].sum()
+                tottal_palette = df_shift.shape[0]
+                tottal_sac = df_shift["Nombre de Sac"].sum()
+
+
+                final_values_header = []
+                final_values_header.extend(cemix_info_list)
+                final_values_header.extend([
+                                            shift_start_date, shift_start_time, str(dpt_golabl), str(otp),
+                                            str(ots), str(tottal_poids), 
+                                            str(tottal_dure_travaile), str(tottal_darret), str(tottal_palette),
+                                            str(tottal_sac)
+                                            ])
+                
+                data_header_shift["Value"] =  final_values_header
+
+                df_shift_UD = df_shift[[
+                                        "Date de Palette", "Numero de Palette", "Nombre de Sac",
+                                        "Article", "Error Commentair", "Echantillon 10Kg", 
+                                        "Echantillon 4Kg", "Palatte_duration", "Ecart"
+                                        ]]
+
+                header_shift = df_shift_UD.columns.tolist()
+                df_shift_UD.loc[-1] = header_shift
+                df_shift_UD.index = df_shift_UD.index + 1
+                df_shift_UD = df_shift_UD.sort_index()
+
+
+                cemix_to_excel(
+                                df_header = data_header_shift,
+                                df_ = df_shift_UD,
+                                header_name = "SHIFT reporting d'ensachage",
+                                filename = file_output_shift,
+                                ishift = True,
+                                size = 18.5, 
+                                num_rows = 3 )
             
-            if not os.path.exists(os.path.join(folder_this_day, "Shifts")):
-                os.mkdir(os.path.join(folder_this_day, "Shifts"))
-
-            shift_format = shift + "__" + datetime.datetime.now().strftime("%d_%M_%Y__%H_%M_%S") + ".xlsx"
-            file_output_shift = os.path.join(folder_this_day, "Shifts", shift_format)
-
-
-            cemix_info_list = list(df_shift[["Operateur Mix","Operateur Ensacheuse", "Clariste P", "Clarist M", "Aide Magasinier"]].iloc[0])
-            shift_start_date = df_shift["Date de Shift"].iloc[0]
-            shift_start_time = df_shift["Heure de Shift"].iloc[0]
-
-            shift_start_datetime = df_shift["Date de Palette"].iloc[0]
-            shift_start_datetime = datetime.datetime.strptime(shift_start_datetime , '%Y-%m-%d %H:%M:%S')
-
-            current_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            current_date = datetime.datetime.strptime(current_date , '%Y-%m-%d %H:%M:%S')
-
-            tottal_dure_travaile = current_date - shift_start_datetime
-            otp = round(( (tottal_dure_travaile.total_seconds() / 60) / dpt_golabl ),2)
-            ots = round((otp*64),2)
-            tottal_poids = df_shift["Poids"].sum()
-            tottal_darret = df_shift[df_shift["Ecart"] >= 0]["Ecart"].sum()
-            tottal_palette = df_shift.shape[0]
-            tottal_sac = df_shift["Nombre de Sac"].sum()
-
-
-            final_values_header = []
-            final_values_header.extend(cemix_info_list)
-            final_values_header.extend([
-                                        shift_start_date, shift_start_time, str(dpt_golabl), str(otp),
-                                        str(ots), str(tottal_poids), 
-                                        str(tottal_dure_travaile), str(tottal_darret), str(tottal_palette),
-                                        str(tottal_sac)
-                                        ])
-            
-            data_header_shift["Value"] =  final_values_header
-
-            df_shift_UD = df_shift[[
-                                    "Date de Palette", "Numero de Palette", "Nombre de Sac",
-                                    "Article", "Error Commentair", "Echantillon 10Kg", 
-                                    "Echantillon 4Kg", "Palatte_duration", "Ecart"
-                                    ]]
-
-            header_shift = df_shift_UD.columns.tolist()
-            df_shift_UD.loc[-1] = header_shift
-            df_shift_UD.index = df_shift_UD.index + 1
-            df_shift_UD = df_shift_UD.sort_index()
-
-
-            cemix_to_excel(
-                            df_header = data_header_shift,
-                            df_ = df_shift_UD,
-                            header_name = "SHIFT reporting d'ensachage",
-                            filename = file_output_shift,
-                            ishift = True,
-                            size = 18.5, 
-                            num_rows = 3 )
-        
             conn.commit()
             conn.close()
 
-    return {"display": "none"}
+    return {"display": "none"}, '', {}
 
 
 @callback(
     [
         Output("number_of_palette", "children"),
-        Output("markdown_close", "children"),
         Output("product_family_input", "value"),
         Output("article_input", "value"),
         Output("nb_sac_input", "value"),
@@ -577,6 +644,8 @@ def update_click_output(suivant_click, terminer_click, ligne, shift, operateur_m
         Output("Poid_palette_input", "value"),
         Output("echantillon_4kg_input", "value"),
         Output("echantillon_10kg_input", "value"),
+        Output("Time_Feedback", "children"),
+        Output("Time_Feedback", "style"),
     ],
     [Input("Suivant_button", "n_clicks")],
     [
@@ -593,63 +662,77 @@ def update_click_output(suivant_click, terminer_click, ligne, shift, operateur_m
 )
 def Suivant(Suivant_button, product_family, article, nb_sac, Palette_comment, Poid_palette, echantillon_4kg, echantillon_10kg):
     current_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
     if Suivant_button > 0:
-        conn = sqlite3.connect(os.path.join(APP_PATH, database_name))
-        cursor = conn.cursor()
-        cursor.execute("SELECT c.id, c.date, c.heure, c.shift, c.ligne FROM cemix_info c WHERE c.is_terminer = ?", (0,))
-        result = cursor.fetchone()
-        cemix_id = result[0]
-        cemix_date = result[1]
-        cemix_heure = result[2]
-        cemix_shift = result[3]
-        cemix_ligne = result[4]
+        if product_family != None and article != None and nb_sac != None and Poid_palette != None and echantillon_4kg != None and echantillon_10kg != None:
+            conn = sqlite3.connect(os.path.join(APP_PATH, database_name))
+            cursor = conn.cursor()
+            cursor.execute("SELECT c.id, c.date, c.heure, c.shift, c.ligne FROM cemix_info c WHERE c.is_terminer = ? and c.ligne = ?", (0, str(G__Ligne_label)))
+            result = cursor.fetchone()
+            cemix_id = result[0]
+            cemix_date = result[1]
+            cemix_heure = result[2]
+            cemix_shift = result[3]
+            cemix_ligne = result[4]
+            
+            numero_palette = get_new_palette_number(cursor)
+            
+            current_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            current_date_UD = datetime.datetime.strptime(current_date , '%Y-%m-%d %H:%M:%S')
+            duration = None
+
+
+            cursor.execute("select p.id, p.date from palette p join cemix_info c on p.cemix_main_id = c.id where c.id = ? order by p.Id desc limit ?;  ", (cemix_id,1))
+            result = cursor.fetchone()
+            if not result: 
+                shift_start_date = shift_start_datetime_when_start
+                shift_start_date = datetime.datetime.strptime(shift_start_date , '%Y-%m-%d %H:%M:%S')
+                duration  = current_date_UD - shift_start_date
+                duration = duration.total_seconds() / 60
+
+            else: 
+                palette_prec_date = datetime.datetime.strptime(result[1] , '%Y-%m-%d %H:%M:%S')
+                duration  = current_date_UD - palette_prec_date
+                duration = duration.total_seconds() / 60
+
+
+            cursor.execute("select id from Article where id = ?;", (article,))
+            result = cursor.fetchone()
+            article_id = result[0]
+
+            query = """
+                    INSERT INTO palette (date, numero_palette, article_id, nombre_de_sac, Commentair, poids, echantillon_4Kg, echantillon_10Kg, duration_min, ecart_by_10, cemix_main_id)
+                    VALUES
+                        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """
+            
+            try:
+                cursor.execute(query, (current_date, str(numero_palette), int(article_id), int(nb_sac), str(Palette_comment), float(Poid_palette), echantillon_4kg, echantillon_10kg, round(duration,2), round((duration - int(dpt_golabl)),2),  cemix_id,))
+            except:
+                print("error")
+
+            Num_Palette_complet = cemix_date.replace("-", ".") + cemix_shift.replace("shift", "S") + cemix_ligne.replace("line", "l") +  numero_palette
+            # generete_barcode(Num_Palette_complet.replace("_", "").replace("-",""), APP_PATH)
+
+            numero_palette = get_new_palette_number(cursor)
+            conn.commit()   
+            conn.close()
+
+            return numero_palette, dash.no_update, dash.no_update, dash.no_update, "", "", "oui", "oui", current_date, {}
         
-        numero_palette = get_new_palette_number(cursor)
-        
-        current_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        current_date_UD = datetime.datetime.strptime(current_date , '%Y-%m-%d %H:%M:%S')
-        duration = None
+        else:
+            colors_list = ["#98260E", "#FF0000", "#770000", "#FF6C6E"]
+            style={
+            "color" : random.choice(colors_list),
+            "font-weight": "Bold",
+            "font-size": "25px"
+        }
+        Text_Error = "Remplissez les champs pour Passe vers la palette suivante"
 
-
-        cursor.execute("select p.id, p.date from palette p join cemix_info c on p.cemix_main_id = c.id where c.id = ? order by p.Id desc limit ?;  ", (cemix_id,1))
-        result = cursor.fetchone()
-        if not result: 
-            shift_start_date = shift_start_datetime_when_start
-            shift_start_date = datetime.datetime.strptime(shift_start_date , '%Y-%m-%d %H:%M:%S')
-            duration  = current_date_UD - shift_start_date
-            duration = duration.total_seconds() / 60
-
-        else: 
-            palette_prec_date = datetime.datetime.strptime(result[1] , '%Y-%m-%d %H:%M:%S')
-            duration  = current_date_UD - palette_prec_date
-            duration = duration.total_seconds() / 60
-
-
-        cursor.execute("select id from Article where id = ?;", (article,))
-        result = cursor.fetchone()
-        article_id = result[0]
-
-        query = """
-                INSERT INTO palette (date, numero_palette, article_id, nombre_de_sac, Commentair, poids, echantillon_4Kg, echantillon_10Kg, duration_min, ecart_by_10, cemix_main_id)
-                VALUES
-                    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """
-        
-        try:
-            cursor.execute(query, (current_date, str(numero_palette), int(article_id), int(nb_sac), str(Palette_comment), float(Poid_palette), echantillon_4kg, echantillon_10kg, round(duration,2), round((duration - int(dpt_golabl)),2),  cemix_id,))
-        except:
-            print("error")
-
-        Num_Palette_complet = cemix_date.replace("-", ".") + cemix_shift.replace("shift", "S") + cemix_ligne.replace("line", "l") +  numero_palette
-        # generete_barcode(Num_Palette_complet.replace("_", "").replace("-",""), APP_PATH)
-
-        numero_palette = get_new_palette_number(cursor)
-        conn.commit()   
-        conn.close()
-
-        return numero_palette, current_date, dash.no_update, dash.no_update, dash.no_update, "", "", "oui", "oui"
+        return dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, Text_Error, style
+    
     else:
-        return dash.no_update, current_date, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update
+        return dash.no_update,  dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, current_date, {}
 
 
 @callback(
