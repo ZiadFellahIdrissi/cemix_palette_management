@@ -23,7 +23,7 @@ dash.register_page(__name__, name=G__Ligne_name)
 APP_PATH = str(pathlib.Path(__file__).parent.parent.resolve()) 
 database_name = "Cemix_database_test.db"
 
-file_path_excel_parameter = os.path.join(APP_PATH, 'Parametres\Cemix_input_parametre.xlsx')
+file_path_excel_parameter = os.path.join(APP_PATH, 'Parametres/Cemix_input_parametre.xlsx')
 shift_start_datetime_when_start = None
 
 conn = sqlite3.connect(os.path.join(APP_PATH, database_name))
