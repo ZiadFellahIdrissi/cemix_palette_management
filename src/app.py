@@ -10,7 +10,6 @@ import sqlite3
 import random
 import datetime
 import base64
-# from models.generete_barcode import generete_barcode
 from models.cemix_to_excel import cemix_to_excel
 from functions.functions import minutes_to_hh_mm ,fetch_famille_options ,get_input_options ,get_new_palette_number
 import flask
@@ -31,7 +30,7 @@ app._favicon = "D_cemix.ico"
 # Varibales
 APP_PATH = str(pathlib.Path(__file__).parent.resolve())
 database_name = "Cemix_database_test.db"
-file_path_excel_parameter = os.path.join(APP_PATH, 'Parametres\Cemix_input_parametre.xlsx')
+file_path_excel_parameter = os.path.join(APP_PATH, 'Parametres/Cemix_input_parametre.xlsx')
 shift_start_datetime_when_start = None
 
 conn = sqlite3.connect(os.path.join(APP_PATH, database_name))
