@@ -1,0 +1,8 @@
+barcode_generator==0.1rc15
+dash==2.13.0
+Flask==2.1.2
+openpyxl==3.0.9
+pandas==1.4.2
+reportlab==4.0.4
+gunicorn
+dash-tools
